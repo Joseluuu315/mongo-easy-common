@@ -226,7 +226,7 @@ npm run test:integration
 
 ## Contributing
 
-Contributions are welcome. Please open an issue or pull request on [GitHub](<https://github.com/<OWNER>/<REPO>>).
+Contributions are welcome. Please open an issue or pull request on [GitHub](<(https://github.com/Joseluuu315/mongo-easy-common)>).
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feat/my-feature`)
@@ -239,4 +239,6 @@ Make sure all tests pass and coverage does not regress before submitting.
 
 ## License
 
-[MIT](./LICENSE) © \<OWNER\>
+[MIT](./LICENSE) © Jose Luis Fuentes Parra
+
+This readme has been made by Claude IA
