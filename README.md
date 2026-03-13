@@ -2,25 +2,58 @@
 
 [![CI](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/<OWNER>/<REPO>/branch/main/graph/badge.svg)](https://codecov.io/gh/<OWNER>/<REPO>)
+[![npm version](https://img.shields.io/npm/v/mongo-easy-common.svg)](https://www.npmjs.com/package/mongo-easy-common)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Simple, reliable helpers for connecting to MongoDB with the native driver.
+> Lightweight, TypeScript-first helpers for MongoDB — connect, query, and manage transactions with minimal boilerplate.
+
+---
+
+## Table of Contents
+
+- [mongo-easy-common](#mongo-easy-common)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Quick Start](#quick-start)
+  - [API Reference](#api-reference)
+    - [`connect`](#connect)
+    - [`getDb` / `getClient`](#getdb--getclient)
+    - [`disconnect`](#disconnect)
+    - [`healthcheck`](#healthcheck)
+    - [`withTransaction`](#withtransaction)
+    - [`retry`](#retry)
+    - [`createMongoManager`](#createmongomanager)
+  - [Configuration](#configuration)
+  - [Integration Tests](#integration-tests)
+  - [Scripts](#scripts)
+  - [Contributing](#contributing)
+  - [License](#license)
+
+---
 
 ## Features
 
-- One-line connect and reusable default manager
-- Health checks via ping
-- Safe transactions helper
-- Built-in retry with backoff
-- Multiple manager instances if you need multi-DB or multi-tenant
-- TypeScript-first with full typings
+- **One-line setup** — connect and get a reusable default manager in a single call
+- **Health checks** — built-in `ping` to verify connectivity
+- **Safe transactions** — automatic session lifecycle management
+- **Retry with backoff** — configurable exponential backoff out of the box
+- **Multi-tenant support** — create independent manager instances for multiple databases
+- **TypeScript-first** — full type definitions included, no `@types` package needed
 
-## Install
+---
+
+## Installation
 
 ```bash
 npm install mongo-easy-common mongodb
 ```
 
-## Quick start
+> `mongodb` is a required peer dependency. Make sure you have it installed alongside this package.
+
+---
+
+## Quick Start
 
 ```ts
 import { connect, getDb, disconnect } from "mongo-easy-common";
@@ -28,135 +61,182 @@ import { connect, getDb, disconnect } from "mongo-easy-common";
 await connect({ uri: "mongodb://localhost:27017", dbName: "app" });
 
 const db = getDb();
-const users = db.collection("users");
-await users.insertOne({ name: "Ada" });
+await db.collection("users").insertOne({ name: "Ada" });
 
 await disconnect();
 ```
 
-## API
+---
 
-### connect
+## API Reference
 
-```ts
-connect({ uri: "mongodb://localhost:27017", dbName: "app" });
-```
+### `connect`
 
-- Creates a single default manager and reuses the connection.
-- If `dbName` is not provided, it tries to extract it from the URI.
-
-### getDb / getClient
+Creates the default manager and establishes a connection. Subsequent calls reuse the existing connection.
 
 ```ts
-const db = getDb();
-const client = getClient();
+await connect({ uri: "mongodb://localhost:27017", dbName: "app" });
 ```
 
-- Throws if you have not connected yet.
+| Option   | Type     | Required | Description                                                                 |
+|----------|----------|----------|-----------------------------------------------------------------------------|
+| `uri`    | `string` | Yes      | MongoDB connection string                                                   |
+| `dbName` | `string` | No       | Target database name. Falls back to the database name embedded in the URI  |
 
-### disconnect
+---
+
+### `getDb` / `getClient`
+
+Returns the default `Db` or `MongoClient` instance. Throws if `connect` has not been called first.
+
+```ts
+const db = getDb();       // Db instance
+const client = getClient(); // MongoClient instance
+```
+
+---
+
+### `disconnect`
+
+Closes the underlying `MongoClient` connection.
 
 ```ts
 await disconnect();
 ```
 
-- Closes the underlying Mongo client.
+---
 
-### healthcheck
+### `healthcheck`
+
+Sends a `{ ping: 1 }` command to the server and returns `true` if successful, `false` otherwise.
 
 ```ts
-const ok = await healthcheck();
+const isAlive = await healthcheck();
 ```
 
-- Sends `{ ping: 1 }` to the server.
+---
 
-### withTransaction
+### `withTransaction`
+
+Wraps a callback in a managed MongoDB session and transaction. Handles session teardown automatically.
 
 ```ts
 await withTransaction(async (session) => {
-  await getDb().collection("items").insertOne({ name: "test" }, { session });
+  await getDb()
+    .collection("orders")
+    .insertOne({ item: "widget", qty: 10 }, { session });
 });
 ```
 
-- Manages session lifecycle for you.
-- Throws if the transaction returns `undefined`.
+> **Note:** The callback must return a value. Returning `undefined` will cause the helper to throw.
 
-### retry
+---
+
+### `retry`
+
+Retries an async operation with configurable exponential backoff.
 
 ```ts
-const result = await retry(async () => {
-  return getDb().collection("items").findOne({ name: "test" });
-}, {
-  retries: 3,
-  delayMs: 200,
-  factor: 2,
-  isRetryable: (err) => true,
-});
+const result = await retry(
+  async () => getDb().collection("items").findOne({ name: "widget" }),
+  {
+    retries: 3,       // Maximum number of retry attempts
+    delayMs: 200,     // Initial delay in milliseconds
+    factor: 2,        // Backoff multiplier applied on each attempt
+    isRetryable: (err) => true, // Predicate to determine if the error warrants a retry
+  }
+);
 ```
 
-- Exponential backoff with a simple, predictable API.
+| Option        | Type                       | Default | Description                                   |
+|---------------|----------------------------|---------|-----------------------------------------------|
+| `retries`     | `number`                   | `3`     | Maximum retry attempts                        |
+| `delayMs`     | `number`                   | `200`   | Initial delay between retries (ms)            |
+| `factor`      | `number`                   | `2`     | Exponential backoff multiplier                |
+| `isRetryable` | `(err: unknown) => boolean`| `() => true` | Controls whether an error should trigger a retry |
 
-### createMongoManager
+---
+
+### `createMongoManager`
+
+Creates an independent manager instance. Use this when you need separate connections — for example, in multi-tenant or multi-database scenarios.
 
 ```ts
 import { createMongoManager } from "mongo-easy-common";
 
-const manager = createMongoManager({ uri: "mongodb://localhost:27017", dbName: "app" });
+const manager = createMongoManager({
+  uri: "mongodb://localhost:27017",
+  dbName: "analytics",
+});
+
 await manager.connect();
 
 const db = manager.getDb();
+await db.collection("events").find({}).toArray();
+
 await manager.disconnect();
 ```
 
-- Use this when you need multiple independent connections.
+---
 
-## Environment variables (optional)
+## Configuration
 
-You can pass the URI directly or build a tiny wrapper in your app:
+You can pass the connection URI directly or source it from an environment variable:
 
 ```ts
 await connect({ uri: process.env.MONGO_URI ?? "" });
 ```
 
-## Integration test (optional)
+No special configuration file is required. All options are passed directly to `connect` or `createMongoManager`.
 
-This package includes an integration test you can run against a local Mongo instance:
+---
+
+## Integration Tests
+
+An optional integration test suite runs against a live MongoDB instance.
 
 ```bash
+# Start a local MongoDB instance
 docker compose up -d
-set MONGO_URI=mongodb://localhost:27017/testdb
+
+# Set the connection URI
+export MONGO_URI=mongodb://localhost:27017/testdb
+
+# Run integration tests
 npm run test:integration
 ```
 
+---
+
 ## Scripts
 
-- `npm run build`
-- `npm test`
-- `npm run test:coverage`
-- `npm run lint`
-- `npm run format`
-- `npm run changeset`
-- `npm run version`
-- `npm run release`
+| Command                  | Description                          |
+|--------------------------|--------------------------------------|
+| `npm run build`          | Compile TypeScript to `dist/`        |
+| `npm test`               | Run unit tests                       |
+| `npm run test:coverage`  | Run tests with coverage report       |
+| `npm run test:integration` | Run integration tests (requires MongoDB) |
+| `npm run lint`           | Lint source files                    |
+| `npm run format`         | Format source files with Prettier    |
+| `npm run changeset`      | Create a new changeset               |
+| `npm run version`        | Bump version from changesets         |
+| `npm run release`        | Build and publish to npm             |
 
-## Publishing
+---
 
-```bash
-npm login
-npm run build
-npm publish
-```
+## Contributing
 
-If you use a scoped package name (for example `@your-scope/mongo-easy-common`) publish with:
+Contributions are welcome. Please open an issue or pull request on [GitHub](<https://github.com/<OWNER>/<REPO>>).
 
-```bash
-npm publish --access public
-```
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feat/my-feature`)
+3. Commit your changes
+4. Open a pull request
 
-## Badges
+Make sure all tests pass and coverage does not regress before submitting.
 
-Replace `<OWNER>/<REPO>` in the badge URLs with your GitHub repository.
+---
 
 ## License
 
-MIT
+[MIT](./LICENSE) © \<OWNER\>
