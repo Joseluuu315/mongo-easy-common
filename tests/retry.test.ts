@@ -35,13 +35,14 @@ describe("retry", () => {
       .fn()
       .mockRejectedValueOnce(new Error("fail-1"))
       .mockRejectedValueOnce(new Error("fail-2"))
-      .mockRejectedValueOnce(new Error("fail-3"));
+      .mockRejectedValueOnce(new Error("fail-3"))
+      .mockRejectedValueOnce(new Error("fail-4"));
 
     await expect(
       manager.retry(fn, { retries: 3, delayMs: 1 })
-    ).rejects.toThrow("fail-3");
+    ).rejects.toThrow("fail-4");
 
-    expect(fn).toHaveBeenCalledTimes(3);
+    expect(fn).toHaveBeenCalledTimes(4);
   });
 
   it("succeeds on the first attempt without retrying", async () => {

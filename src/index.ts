@@ -187,13 +187,13 @@ export class MongoEasyManager {
     let attempt = 0;
     let wait = delayMs;
 
-    while (true) {
+    while (attempt <= retries) {
       try {
         return await fn();
       } catch (error) {
-        const shouldRetry = attempt < retries && isRetryable(error);
-
-        if (!shouldRetry) throw error;
+        if (attempt === retries || !isRetryable(error)) {
+          throw error;
+        }
 
         onRetry?.(error, attempt + 1);
 
@@ -202,6 +202,9 @@ export class MongoEasyManager {
         attempt++;
       }
     }
+
+    // This line should never be reached, but TypeScript needs it
+    throw new Error("Maximum retries exceeded");
   }
 
   private sleep(ms: number): Promise<void> {
