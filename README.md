@@ -1,7 +1,7 @@
 ﻿# mongo-easy-common
 
-[![CI](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml/badge.svg)](https://github.com/<OWNER>/<REPO>/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/<OWNER>/<REPO>/branch/main/graph/badge.svg)](https://codecov.io/gh/<OWNER>/<REPO>)
+[![CI](https://github.com/Joseluuu315/mongo-easy-common/actions/workflows/ci.yml/badge.svg)](https://github.com/Joseluuu315/mongo-easy-common/actions/workflows/ci.yml)
+[![Coverage](https://codecov.io/gh/Joseluuu315/mongo-easy-common/branch/main/graph/badge.svg)](https://codecov.io/gh/Joseluuu315/mongo-easy-common)
 [![npm version](https://img.shields.io/npm/v/mongo-easy-common.svg)](https://www.npmjs.com/package/mongo-easy-common)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
