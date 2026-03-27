@@ -9,7 +9,7 @@ describe("integration", () => {
   let collection: EasyCollection<{ name: string; age?: number; active?: boolean }>;
 
   beforeAll(async () => {
-    // Skip connection if no MongoDB URI is provided
+    // Skip connection if no MongoDB URI is provideda
     if (!uri) {
       console.log("Skipping integration tests - no MONGO_URI provided");
       return;
