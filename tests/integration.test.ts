@@ -18,7 +18,7 @@ describe("integration", () => {
     try {
       await manager.connect();
       collection = manager.col<{ name: string; age?: number; active?: boolean }>("items");
-    } catch (err) {
+    } catch {
       console.log("Failed to connect to MongoDB, skipping integration tests");
     }
   });
