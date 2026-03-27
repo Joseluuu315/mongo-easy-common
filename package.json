@@ -10,39 +10,61 @@
   "files": [
     "dist"
   ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run build && npm run test && npm run audit",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:integration": "vitest run tests/integration.test.ts",
     "lint": "eslint \"src/**/*.ts\" \"tests/**/*.ts\"",
+    "lint:fix": "eslint \"src/**/*.ts\" \"tests/**/*.ts\" --fix",
     "format": "prettier -w \"src/**/*.ts\" \"tests/**/*.ts\" \"README.md\"",
+    "format:check": "prettier -c \"src/**/*.ts\" \"tests/**/*.ts\" \"README.md\"",
+    "audit": "npm audit --audit-level=moderate",
+    "audit:fix": "npm audit fix",
+    "security": "npm run audit && npm run lint && npm run test",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "changeset publish"
+    "release": "changeset publish",
+    "precommit": "npm run lint && npm run test && npm run build"
   },
   "keywords": [
     "mongodb",
     "mongo",
     "database",
-    "connection"
+    "connection",
+    "typescript",
+    "odm",
+    "crud",
+    "transaction"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Joseluuu315/mongo-easy-common.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Joseluuu315/mongo-easy-common/issues"
+  },
+  "homepage": "https://github.com/Joseluuu315/mongo-easy-common#readme",
   "dependencies": {
-    "mongodb": "^6.0.0"
+    "mongodb": "^6.10.0"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.0",
-    "@types/node": "^22.0.0",
-    "@typescript-eslint/eslint-plugin": "^8.0.0",
-    "@typescript-eslint/parser": "^8.0.0",
-    "@vitest/coverage-v8": "^4.1.0",
-    "eslint": "^9.0.0",
-    "eslint-config-prettier": "^9.0.0",
-    "prettier": "^3.0.0",
-    "typescript": "^5.0.0",
-    "vitest": "^4.1.0"
+    "@changesets/cli": "^2.27.1",
+    "@types/node": "^22.9.0",
+    "@typescript-eslint/eslint-plugin": "^8.14.0",
+    "@typescript-eslint/parser": "^8.14.0",
+    "@vitest/coverage-v8": "^2.1.4",
+    "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4"
   }
 }
