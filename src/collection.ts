@@ -36,6 +36,52 @@ import { PaginateOptions, PaginateResult, UpsertResult } from "./types";
 export class EasyCollection<T extends Document> {
   constructor(private readonly collection: Collection<T>) {}
 
+  private unwrapFindAndModifyResult<R>(result: unknown): R | null {
+    if (result === null || result === undefined) {
+      return null;
+    }
+
+    if (typeof result === "object" && result !== null && "value" in result) {
+      return (result as { value?: R | null }).value ?? null;
+    }
+
+    return result as R;
+  }
+
+  private isUpsertCreated(result: unknown): boolean {
+    if (result === null || result === undefined) {
+      return false;
+    }
+
+    if (typeof result === "object" && result !== null) {
+      // Some mocked environments may return the updated doc directly and include `upsertedId`.
+      if ("upsertedId" in result) {
+        const v = (result as { upsertedId?: unknown }).upsertedId;
+        return v !== null && v !== undefined;
+      }
+
+      // MongoDB driver returns ModifyResult where creation info is inside lastErrorObject.
+      if ("lastErrorObject" in result) {
+        const leo = (result as { lastErrorObject?: any }).lastErrorObject;
+        if (!leo) return false;
+
+        if (typeof leo.updatedExisting === "boolean") {
+          return leo.updatedExisting === false;
+        }
+
+        if ("upserted" in leo) {
+          return leo.upserted !== null && leo.upserted !== undefined;
+        }
+
+        if ("upsertedId" in leo) {
+          return leo.upsertedId !== null && leo.upsertedId !== undefined;
+        }
+      }
+    }
+
+    return false;
+  }
+
   // ── Raw access ──────────────────────────────────────────────────────────────
 
   /** Returns the underlying MongoDB Collection for advanced operations. */
@@ -268,7 +314,8 @@ export class EasyCollection<T extends Document> {
     update: UpdateFilter<T>,
     options: FindOneAndUpdateOptions = { returnDocument: "after" }
   ): Promise<WithId<T> | null> {
-    return this.collection.findOneAndUpdate(filter, update, options);
+    const result = await this.collection.findOneAndUpdate(filter, update, options);
+    return this.unwrapFindAndModifyResult<WithId<T>>(result);
   }
 
   /**
@@ -291,14 +338,14 @@ export class EasyCollection<T extends Document> {
       { upsert: true, returnDocument: "after", ...options } as FindOneAndUpdateOptions
     );
 
-    if (!result) {
+    const doc = this.unwrapFindAndModifyResult<WithId<T>>(result);
+    if (!doc) {
       throw new MongoEasyError("Upsert did not return a document.");
     }
 
-    const created =
-      "upsertedId" in result ? result.upsertedId !== null : false;
+    const created = this.isUpsertCreated(result);
 
-    return { doc: result as WithId<T>, created };
+    return { doc, created };
   }
 
   // ── Delete ──────────────────────────────────────────────────────────────────
