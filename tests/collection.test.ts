@@ -4,8 +4,26 @@ import { MongoEasyError } from "../src/errors";
 import { ObjectId } from "mongodb";
 
 describe("EasyCollection", () => {
-  let collection: EasyCollection<any>;
-  let mockCollection: any;
+  let collection: EasyCollection<Document>;
+  let mockCollection: {
+    insertOne: ReturnType<typeof vi.fn>;
+    insertMany: ReturnType<typeof vi.fn>;
+    findOne: ReturnType<typeof vi.fn>;
+    find: ReturnType<typeof vi.fn>;
+    countDocuments: ReturnType<typeof vi.fn>;
+    distinct: ReturnType<typeof vi.fn>;
+    updateOne: ReturnType<typeof vi.fn>;
+    updateMany: ReturnType<typeof vi.fn>;
+    findOneAndUpdate: ReturnType<typeof vi.fn>;
+    deleteOne: ReturnType<typeof vi.fn>;
+    deleteMany: ReturnType<typeof vi.fn>;
+    findOneAndDelete: ReturnType<typeof vi.fn>;
+    aggregate: ReturnType<typeof vi.fn>;
+    bulkWrite: ReturnType<typeof vi.fn>;
+    createIndex: ReturnType<typeof vi.fn>;
+    dropIndex: ReturnType<typeof vi.fn>;
+    listIndexes: ReturnType<typeof vi.fn>;
+  };
 
   beforeEach(() => {
     mockCollection = {
