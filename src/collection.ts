@@ -62,7 +62,7 @@ export class EasyCollection<T extends Document> {
 
       // MongoDB driver returns ModifyResult where creation info is inside lastErrorObject.
       if ("lastErrorObject" in result) {
-        const leo = (result as { lastErrorObject?: any }).lastErrorObject;
+        const leo = (result as { lastErrorObject?: { updatedExisting?: boolean; upserted?: unknown; upsertedId?: unknown } }).lastErrorObject;
         if (!leo) return false;
 
         if (typeof leo.updatedExisting === "boolean") {
