@@ -5,8 +5,8 @@ import { MongoEasyError } from "../src/errors";
 // Mock MongoDB - simplified approach
 vi.mock("mongodb", () => ({
   MongoClient: class {
-    constructor(_uri: string, _options?: unknown) {
-      // Mock constructor
+    constructor(...args: unknown[]) {
+      void args;
     }
     connect = vi.fn().mockResolvedValue(undefined);
     db = vi.fn().mockReturnValue({
