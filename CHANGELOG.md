@@ -1,5 +1,11 @@
 ﻿# Changelog
 
+## 1.0.0
+
+### Major Changes
+
+- bd9366c: Major refactoring and security improvements
+
 ## 0.2.0
 
 ### Minor Changes
